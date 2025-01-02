@@ -1,5 +1,5 @@
-const asyncHandler = require("../middlewares/asyncHandler");
-const userService = require("../services/userService");
+const asyncHandler = require("../../middlewares/asyncHandler");
+const userService = require("../../services/user/userService");
 
 
 exports.getUserProfile = asyncHandler(async (req, res) => {
