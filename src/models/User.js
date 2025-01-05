@@ -4,12 +4,10 @@ const bcrypt = require("bcryptjs");
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, unique: true },
     phone_number: { type: String, required: true, unique: true },
     password: { type: String, default: null },
-    auth_methode: { type: String, default: "password", enum:["password", "google"] },
-    profile_picture: { type: String },
-    points: { type: Number, default: 0 },
+    profile: { type: String },
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     last_login: { type: Date, default: Date.now },
   },

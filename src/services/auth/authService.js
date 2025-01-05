@@ -1,47 +1,25 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../../models/User');
-const generateToken = require('../../utils/generateToken');
+const User = require("../../models/User");
+const generateToken = require("../../utils/generateToken");
 
-const registerUser = async ({ name, email, password, phoneNumber }) => {
-  // Check if the user already exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new Error('User already exists');
-  }
 
-  // Hash password
-  const hashedPassword = await bcrypt.hash(password, 10);
+exports.loginService = async (data)=>{
 
-  // Create user
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-    phone_number: phoneNumber
-  });
+    if (!data.name || !data.email || !data.phoneNumber) {
+        const error = new Error("Phone number, email, and name are required");
+        error.statusCode = 400; // Custom status code
+        throw error;
+    }
 
-  return user;
-};
+    const user = await User({
+        name: data.name,
+        email: data.email,
+        phone_number: data.phoneNumber
+    });
 
-const loginUser = async ({ email, password }) => {
-  const user = await User.findOne({ email });
+    await user.save();
 
-  if (!user) {
-    throw new Error('Invalid email or password');
-  }
+    const token = generateToken(user._id);
 
-  // Check password
-  const isMatch = await bcrypt.compare(password, user.password);
+    return {user, token};
 
-  if (!isMatch) {
-    throw new Error('Invalid email or password');
-  }
-
-  // Generate token
-  const token = generateToken(user._id);
-
-  return { user, token };
-};
-
-module.exports = { registerUser, loginUser };
+}
