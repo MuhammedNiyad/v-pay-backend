@@ -14,8 +14,14 @@ app.use(morgan("dev"));
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 
+app.get("/", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "Welcome to the V-Pay"
+    })
+})
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 
 // Error Handling Middleware
 app.use(errorHandler);
