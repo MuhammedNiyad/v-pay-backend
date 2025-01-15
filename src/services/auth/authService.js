@@ -7,8 +7,8 @@ const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 
 exports.loginService = async (data) => {
-  if (!data.name || !data.email || !data.phoneNumber) {
-    const error = new Error("Phone number, email, and name are required");
+  if (!data.phoneNumber) {
+    const error = new Error("Phone number is required");
     error.statusCode = 400; 
     throw error;
   }
@@ -29,8 +29,7 @@ exports.loginService = async (data) => {
   }
 
   const user = await User({
-    name: data.name,
-    email: data.email,
+    name: `@${data.phoneNumber}`,
     phone_number: data.phoneNumber,
   });
   await user.save();
@@ -72,6 +71,11 @@ const assignReferralPoint = async (userId, refererCode) => {
     referred_user_id: userId,
   });
   await newReferral.save();
+
+  await User.findByIdAndUpdate(
+    userId,
+    { referredBy: referer._id },
+  );
 
   const wallet = await Wallet.findOne({
     user_id: referer._id,

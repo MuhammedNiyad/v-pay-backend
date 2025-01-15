@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.get("/profile", protect, getUserProfile);
 router.get("/referrals", protect, getUserReferrals);
+router.post("/details/save", protect, saveUserDetails);
 
 module.exports = router;
