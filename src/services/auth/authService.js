@@ -19,17 +19,13 @@ exports.loginService = async (data) => {
 
   if(existUser){
 
-    existUser.name = data.name;
-    existUser.email = data.email;
-    await existUser.save();
-
     const token = generateToken(existUser._id);
 
     return  {existUser, token};
   }
 
   const user = await User({
-    name: `@${data.phoneNumber}`,
+    user_name: `@${data.phoneNumber}`,
     phone_number: data.phoneNumber,
   });
   await user.save();
@@ -63,7 +59,9 @@ const assignReferralPoint = async (userId, refererCode) => {
   });
 
   if (!referer) {
-    return;
+    const error = new Error("Invalid referral code");
+    error.statusCode = 400; 
+    throw error;
   }
 
   const newReferral = await Referrals({
