@@ -1,47 +1,93 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../../models/User');
-const generateToken = require('../../utils/generateToken');
+const PointHistory = require("../../models/PointHistory");
+const Referrals = require("../../models/Referrals");
+const User = require("../../models/User");
+const Wallet = require("../../models/Wallet");
+const generateToken = require("../../utils/generateToken");
+const crypto = require("crypto");
+const { v4: uuidv4 } = require("uuid");
 
-const registerUser = async ({ name, email, password, phoneNumber }) => {
-  // Check if the user already exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new Error('User already exists');
+exports.loginService = async (data) => {
+  if (!data.phoneNumber) {
+    const error = new Error("Phone number is required");
+    error.statusCode = 400; 
+    throw error;
   }
 
-  // Hash password
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // Create user
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-    phone_number: phoneNumber
+  const existUser = await User.findOne({
+    phone_number: data.phoneNumber,
   });
 
-  return user;
-};
+  if(existUser){
 
-const loginUser = async ({ email, password }) => {
-  const user = await User.findOne({ email });
+    const token = generateToken(existUser._id);
 
-  if (!user) {
-    throw new Error('Invalid email or password');
+    return  {existUser, token};
   }
 
-  // Check password
-  const isMatch = await bcrypt.compare(password, user.password);
+  const user = await User({
+    user_name: `@${data.phoneNumber}`,
+    phone_number: data.phoneNumber,
+  });
+  await user.save();
 
-  if (!isMatch) {
-    throw new Error('Invalid email or password');
+  await Wallet.create({
+    user_id: user._id,
+    points: 0,
+    point_history: [],
+  });
+
+  user.referral_code = generateReferralCode(user._id);
+  await user.save();
+
+  if (data.referralCode) {
+    await assignReferralPoint(user._id, data.referralCode);
   }
 
-  // Generate token
   const token = generateToken(user._id);
 
   return { user, token };
 };
+const generateReferralCode = (userId) => {
+  const baseString = `${userId}-${uuidv4()}`;
+  const hash = crypto.createHash("sha256").update(baseString).digest("hex");
 
-module.exports = { registerUser, loginUser };
+  return hash.substring(0, 6).toUpperCase();
+};
+const assignReferralPoint = async (userId, refererCode) => {
+  const referer = await User.findOne({
+    referral_code: refererCode,
+  });
+
+  if (!referer) {
+    const error = new Error("Invalid referral code");
+    error.statusCode = 400; 
+    throw error;
+  }
+
+  const newReferral = await Referrals({
+    user_id: referer._id,
+    referred_user_id: userId,
+  });
+  await newReferral.save();
+
+  await User.findByIdAndUpdate(
+    userId,
+    { referredBy: referer._id },
+  );
+
+  const wallet = await Wallet.findOne({
+    user_id: referer._id,
+  });
+
+  wallet.points += 50;
+  wallet.point_history.push(newReferral._id);
+  await wallet.save();
+
+  await PointHistory.create({
+    user_id: referer._id,
+    point: 50,
+    source_type: "REFERRAL",
+    transaction_id: null,
+    referral_id: newReferral._id,
+  });
+};
