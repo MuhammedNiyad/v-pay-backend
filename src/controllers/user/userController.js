@@ -6,11 +6,13 @@ const { getUserProfileService } = require("../../services/user/getUserProfile");
 const {
   getUserReferralsService,
 } = require("../../services/user/getUserReferrals");
+const { getUserTransactionService } = require("../../services/user/getUserTransactions");
 const { getUserWalletService } = require("../../services/user/getUserWallet");
 const { saveUserDetails } = require("../../services/user/saveUserDetails");
 
 exports.getUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user.id;
+  console.log(userId);
   const userProfile = await getUserProfileService(userId);
 
   res.status(200).json({
