@@ -19,7 +19,8 @@ app.get("/", (req, res) => {
         success: true,
         message: "Welcome to the V-Pay"
     })
-})
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
