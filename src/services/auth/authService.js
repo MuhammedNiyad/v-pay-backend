@@ -18,10 +18,10 @@ exports.loginService = async (data) => {
   });
 
   if(existUser){
-
+    const user = existUser;
     const token = generateToken(existUser._id);
 
-    return  {existUser, token};
+    return  {user, token};
   }
 
   const user = await User({

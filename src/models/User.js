@@ -13,8 +13,8 @@ const userSchema = new mongoose.Schema(
     first_name: { type: String },
     last_name: { type: String },
     email: { type: String },
-    date_of_birth: { type: Date },
-    gender: { type: String },
+    date_of_birth: { type: String },
+    gender: { type: String, enum: ["male", "female", "other"] },
     pan_number: { type: String },
   },
   { timestamps: true }
