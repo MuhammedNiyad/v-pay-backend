@@ -3,8 +3,7 @@ const Wallet = require("../../models/Wallet");
 exports.getUserWalletService = async (userId) => {
     try {
         
-        const wallet = await Wallet.findById(userId);
-
+        const wallet = await Wallet.findOne({user_id: userId});
         return wallet;
 
     } catch (error) {
